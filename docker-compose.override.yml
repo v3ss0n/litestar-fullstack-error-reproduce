@@ -19,9 +19,3 @@ services:
       - ./poetry.lock:/workspace/app/poetry.lock
       - ./mkdocs.yml:/workspace/app/mkdocs.yml
     command: run server --reload
-
-  localmail:
-    image: mailhog/mailhog:v1.0.0
-    container_name: localmail
-    ports:
-      - "8025:8025"

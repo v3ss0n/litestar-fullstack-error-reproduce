@@ -1,6 +1,6 @@
 ARG PYTHON_BUILDER_IMAGE=3.11-slim-bullseye
 ARG NODE_BUILDER_IMAGE=18-slim
-ARG PYTHON_RUN_IMAGE=gcr.io/distroless/cc:nonroot
+ARG PYTHON_RUN_IMAGE=3.11-slim-bullseye
 ## ---------------------------------------------------------------------------------- ##
 ## ------------------------- UI image ----------------------------------------------- ##
 ## ---------------------------------------------------------------------------------- ##
@@ -84,39 +84,13 @@ COPY --from=ui-image --chown=65532:65532 /workspace/app/src/app/domain/web/publi
 EXPOSE 8000
 
 
-
 ## ---------------------------------------------------------------------------------- ##
-## ------------------------- distroless runtime build ------------------------------- ##
-## ---------------------------------------------------------------------------------- ##
-## ------------------------- use distroless `cc` image  ----------------------------- ##
 
-FROM ${PYTHON_RUN_IMAGE} as run-image
 ARG ENV_SECRETS="runtime-secrets"
 # TODO: it would be great if chipset was autodetected as x86 or arm for better M1 support
-ARG CHIPSET_ARCH=x86_64-linux-gnu
 ENV PATH="/workspace/app/.venv/bin:$PATH" \
-    ENV_SECRETS="${ENV_SECRETS}" \
-    CHIPSET_ARCH="${CHIPSET_ARCH}"
+    ENV_SECRETS="${ENV_SECRETS}"
 
-## ------------------------- copy python itself from builder -------------------------- ##
-COPY --from=python-base /usr/local/lib/ /usr/local/lib/
-COPY --from=python-base /usr/local/bin/python /usr/local/bin/python
-COPY --from=python-base /etc/ld.so.cache /etc/ld.so.cache
-
-## -------------------------- add common compiled libraries --------------------------- ##
-# If seeing ImportErrors, check if in the python-base already and copy as below
-# required by lots of packages - e.g. six, numpy, wsgi
-COPY --from=python-base /lib/${CHIPSET_ARCH}/libz.so.1 /lib/${CHIPSET_ARCH}/
-COPY --from=python-base /lib/${CHIPSET_ARCH}/libbz2.so.1.0 /lib/${CHIPSET_ARCH}/
-# required by google-cloud/grpcio
-COPY --from=python-base /usr/lib/${CHIPSET_ARCH}/libffi* /usr/lib/${CHIPSET_ARCH}/
-COPY --from=python-base /lib/${CHIPSET_ARCH}/libexpat* /lib/${CHIPSET_ARCH}/
-
-## -------------------------- add application ---------------------------------------- ##
-COPY --from=build-image --chown=65532:65532 /workspace/app/.venv  /workspace/app/.venv
-COPY --from=build-image --chown=65532:65532 /workspace/app/src /workspace/app/src
-
-## --------------------------- standardize execution env ----------------------------- ##
 ENV PIP_DEFAULT_TIMEOUT=100 \
     PIP_DISABLE_PIP_VERSION_CHECK=1 \
     PIP_NO_CACHE_DIR=1 \
@@ -129,4 +103,4 @@ ENV PIP_DEFAULT_TIMEOUT=100 \
 STOPSIGNAL SIGINT
 EXPOSE 8000/tcp
 ENTRYPOINT [ "app" ]
-CMD [ "run", "server"]
+CMD ["run", "server","-r","-d"]

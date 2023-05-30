@@ -15,7 +15,7 @@ from app.lib import settings, worker
 from app.lib.service.generic import Service
 from app.lib.worker.controllers import WorkerController
 
-from . import accounts, analytics, openapi, plugins, security, system, teams, urls, web
+from . import accounts, analytics, openapi, plugins, projects, security, system, teams, urls, web
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
@@ -31,6 +31,7 @@ routes: list[ControllerRouterHandler] = [
     # teams.controllers.TeamInvitationController,
     # teams.controllers.TeamMemberController,
     analytics.controllers.StatsController,
+    projects.controllers.ApiController,
     system.controllers.SystemController,
     web.controllers.WebController,
 ]
@@ -51,6 +52,7 @@ __all__ = [
     "openapi",
     "analytics",
     "plugins",
+    "projects",
     "signature_namespace",
 ]
 tasks: dict[worker.Queue, list[worker.WorkerFunction]] = {
